@@ -1,0 +1,62 @@
+name: publish-package
+
+on:
+  workflow_dispatch: 
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+
+  build:
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    defaults:
+      run:
+        shell: pwsh
+    env:
+      Release_Dir: bin/Release
+      Package_Name: Yuehanxin.ApplicationLogging
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v5
+      with:
+        fetch-depth: 0
+        
+    - name: Install .NET Core
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 10.0.x
+
+    - name: Get Semantic Version
+      id: semantic
+      run: |
+        $tag="${{ github.ref_name }}"
+        if ($tag -notmatch '^v(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$') {
+          Write-Host "Invalid semantic version: $tag"
+          exit 1
+        }
+        $version = $tag -replace "^v", ""
+        "VERSION=$version" >> $env:GITHUB_OUTPUT
+
+    - name: Restore Packages
+      run: dotnet restore
+      
+    - name: Test
+      run: dotnet test
+
+    - name: Build
+      run: dotnet build -c Release --no-restore
+
+    - name: Pack
+      run: dotnet pack -c Release -p:Version=${{ steps.semantic.outputs.VERSION }} -o ./nupkgs
+
+    - name: Add Source
+      run: dotnet nuget add source https://nuget.pkg.github.com/${{ github.actor }}/index.json --name github --username ${{ github.actor }} --password ${{ github.token }} 
+
+    - name: Nuget Publish
+      run: dotnet nuget push "./nupkgs/${{ env.Package_Name }}.${{ steps.semantic.outputs.VERSION }}.nupkg" --source github --skip-duplicate
