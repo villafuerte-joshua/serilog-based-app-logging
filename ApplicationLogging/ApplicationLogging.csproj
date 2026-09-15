@@ -11,7 +11,12 @@
 		<Description>Shared Serilog-based application logging setup for IHostBuilder and IHostApplicationBuilder.</Description>
 		<PackageTags>logging;serilog</PackageTags>
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+		<PackageReadmeFile>README.md</PackageReadmeFile>
 	</PropertyGroup>
+
+	<ItemGroup>
+		<None Include="README.md" Pack="true" PackagePath="\" />
+	</ItemGroup>
 
 	<ItemGroup>
 		<PackageReference Include="Serilog.AspNetCore" Version="10.0.0" />
