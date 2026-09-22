@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using ApplicationLogging.Enrichers;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Serilog;
@@ -88,6 +89,7 @@ namespace ApplicationLogging
                 .Enrich.WithMachineName()
                 .Enrich.WithEnvironmentName()
                 .Enrich.With<ActivityIdEnricher>()
+                .Enrich.With<AppVersionEnricher>()
                 .WriteTo.Console(new ActivityPrefixedConsoleFormatter());
 
             return loggerConfiguration;
