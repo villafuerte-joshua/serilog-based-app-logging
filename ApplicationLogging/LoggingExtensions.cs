@@ -11,7 +11,17 @@ namespace ApplicationLogging
     public static class LoggingExtensions
     {
         /// <summary>
-        /// Use application logging for host builders
+        /// Use application logging for host builders, reading all settings from the host's configuration
+        /// </summary>
+        /// <param name="host"></param>
+        /// <returns></returns>
+        public static IHostBuilder UseApplicationLogging(this IHostBuilder host)
+        {
+            return ConfigureHostBuilder(host, context => context.Configuration);
+        }
+
+        /// <summary>
+        /// Use application logging for host builders, reading all settings from the given configuration
         /// </summary>
         /// <param name="host"></param>
         /// <param name="configuration"></param>
@@ -20,14 +30,26 @@ namespace ApplicationLogging
             this IHostBuilder host,
             IConfiguration configuration)
         {
+            return ConfigureHostBuilder(host, _ => configuration);
+        }
+
+        /// <summary>
+        /// Configure logging for a host builder so that options, the Serilog section and the default sink decisions all come from the same configuration
+        /// </summary>
+        /// <param name="host"></param>
+        /// <param name="getConfiguration"></param>
+        /// <returns></returns>
+        private static IHostBuilder ConfigureHostBuilder(IHostBuilder host, Func<HostBuilderContext, IConfiguration> getConfiguration)
+        {
             host.ConfigureServices((context, services) =>
             {
-                RegisterLoggingOptions(services, configuration);
+                RegisterLoggingOptions(services, getConfiguration(context));
             });
 
             host.UseSerilog((context, services, loggerConfiguration) =>
             {
-                ConfigureBaseLogger(context.HostingEnvironment, loggerConfiguration, context.Configuration);
+                var configuration = getConfiguration(context);
+                ConfigureBaseLogger(context.HostingEnvironment, loggerConfiguration, configuration);
 
                 var loggingOptions = GetLoggingOptions(configuration);
                 InitializeLogDir(loggerConfiguration, loggingOptions, configuration);

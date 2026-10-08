@@ -59,21 +59,22 @@ app.Run();
 ```csharp
 using ApplicationLogging;
 
-var configuration = new ConfigurationBuilder()
-    .SetBasePath(AppContext.BaseDirectory)
-    .AddJsonFile("appsettings.json", optional: false)
-    .AddJsonFile($"appsettings.{Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT") ?? "Production"}.json", optional: true)
-    .AddEnvironmentVariables()
-    .Build();
-
 var host = Host.CreateDefaultBuilder(args)
-    .UseApplicationLogging(configuration)
+    .UseApplicationLogging()
     .Build();
 
 await host.RunAsync();
 ```
 
-> Pass the same configuration your host uses. `LoggingOptions` and the decision to use the default sinks come from the `configuration` argument. The `Serilog` section is read from the host's own configuration.
+With no arguments, settings are read from the host's own configuration: `appsettings.json`, `appsettings.{Environment}.json`, environment variables, command-line arguments and so on.
+
+To read settings from a different configuration, pass it in. `LoggingOptions` and the `Serilog` section are then read only from that configuration, and the host's configuration is not used for logging:
+
+```csharp
+var host = Host.CreateDefaultBuilder(args)
+    .UseApplicationLogging(myConfiguration)
+    .Build();
+```
 
 ### 3. Write logs
 
