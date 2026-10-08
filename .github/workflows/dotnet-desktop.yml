@@ -48,14 +48,14 @@ jobs:
       - name: Restore Packages
         run: dotnet restore
 
-      - name: Test
-        run: dotnet test
-
       - name: Build
-        run: dotnet build -c Release --no-restore
+        run: dotnet build -c Release --no-restore -p:Version=${{ steps.semantic.outputs.VERSION }}
+
+      - name: Test
+        run: dotnet test -c Release --no-build
 
       - name: Pack
-        run: dotnet pack -c Release -p:Version=${{ steps.semantic.outputs.VERSION }} -o ./nupkgs
+        run: dotnet pack -c Release --no-build -p:Version=${{ steps.semantic.outputs.VERSION }} -o ./nupkgs
 
       - name: NuGet Login
         id: nuget-login
