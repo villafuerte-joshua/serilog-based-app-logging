@@ -30,7 +30,7 @@ namespace ApplicationLogging
                 ConfigureBaseLogger(context.HostingEnvironment, loggerConfiguration, context.Configuration);
 
                 var loggingOptions = GetLoggingOptions(configuration);
-                InitializeLogDir(loggerConfiguration, loggingOptions);
+                InitializeLogDir(loggerConfiguration, loggingOptions, configuration);
             });
 
             return host;
@@ -51,7 +51,7 @@ namespace ApplicationLogging
             var loggingOptions = configuration.GetSection("LoggingOptions").Get<LoggingOptions>() ?? new LoggingOptions();
 
             var loggerConfiguration = ConfigureBaseLogger(host.Environment, new LoggerConfiguration(), configuration);
-            InitializeLogDir(loggerConfiguration, loggingOptions);
+            InitializeLogDir(loggerConfiguration, loggingOptions, configuration);
 
             Log.Logger = loggerConfiguration.CreateLogger();
             host.Services.AddSerilog(dispose: true);
@@ -60,7 +60,14 @@ namespace ApplicationLogging
         }
 
         /// <summary>
-        /// 
+        /// Helpers to check if any sinks are configured in the Serilog configuration section
+        /// </summary>
+        /// <param name="configuration"></param>
+        /// <returns></returns>
+        private static bool HasConfiguredSinks(IConfiguration configuration) => configuration.GetSection("Serilog:WriteTo").GetChildren().Any();
+
+        /// <summary>
+        /// Configure the base logger with common settings for all environments
         /// </summary>
         /// <param name="environment"></param>
         /// <param name="loggerConfiguration"></param>
@@ -89,32 +96,34 @@ namespace ApplicationLogging
                 .Enrich.WithMachineName()
                 .Enrich.WithEnvironmentName()
                 .Enrich.With<ActivityIdEnricher>()
-                .Enrich.With<AppVersionEnricher>()
-                .WriteTo.Console(new ActivityPrefixedConsoleFormatter());
+                .Enrich.With<AppVersionEnricher>();
+
+            if (!HasConfiguredSinks(configuration))
+            {
+                loggerConfiguration.WriteTo.Console(new ActivityPrefixedConsoleFormatter());
+            }
 
             return loggerConfiguration;
         }
 
         /// <summary>
-        /// 
+        /// Initialize the log directory and configure file logging if a log directory is specified in the logging options
         /// </summary>
         /// <param name="loggerConfiguration"></param>
         /// <param name="loggingOptions"></param>
-        private static void InitializeLogDir(LoggerConfiguration loggerConfiguration, LoggingOptions loggingOptions)
+        private static void InitializeLogDir(LoggerConfiguration loggerConfiguration, LoggingOptions loggingOptions, IConfiguration configuration)
         {
-            if (!string.IsNullOrEmpty(loggingOptions.LogDirectory))
-            {
-                Directory.CreateDirectory(loggingOptions.LogDirectory);
+            if (HasConfiguredSinks(configuration) || string.IsNullOrEmpty(loggingOptions.LogDirectory))
+                return;
 
-                loggerConfiguration.WriteTo.File(
-                    new JsonFormatter(),
-                    Path.Combine(loggingOptions.LogDirectory, $"{loggingOptions.ApplicationName}-log-.json"),
-                    rollingInterval: RollingInterval.Day,
-                    rollOnFileSizeLimit: true);
-            }
+            loggerConfiguration.WriteTo.File(
+                new JsonFormatter(),
+                Path.Combine(loggingOptions.LogDirectory, $"{loggingOptions.ApplicationName}-log-.json"),
+                rollingInterval: RollingInterval.Day,
+                rollOnFileSizeLimit: true);
         }
         /// <summary>
-        /// 
+        /// Register the logging options in the service collection and bind them to the configuration section "LoggingOptions"
         /// </summary>
         /// <param name="services"></param>
         /// <param name="configuration"></param>
@@ -126,7 +135,7 @@ namespace ApplicationLogging
                 .ValidateOnStart();
         }
         /// <summary>
-        /// 
+        /// Get the logging options from the configuration section "LoggingOptions" or return a new instance of LoggingOptions if not found
         /// </summary>
         /// <param name="configuration"></param>
         /// <returns></returns>
