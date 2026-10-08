@@ -25,13 +25,13 @@ builder.UseApplicationLogging(builder.Configuration);
    git push origin v1.2.3
    ```
 
-3. The `publish-package` workflow runs `scripts/Generate-Changelog.ps1`. That script writes the changes between the new tag and the previous `v*` tag into the package release notes, regenerates `CHANGELOG.md` inside the package, and then publishes to nuget.org.
+3. The `publish-package` workflow runs `.github/scripts/Generate-Changelog.ps1`. That script writes the changes between the new tag and the previous `v*` tag into the package release notes, regenerates `CHANGELOG.md` inside the package, and then publishes to nuget.org.
 
 To refresh the committed `CHANGELOG.md` locally:
 
 ```powershell
-./scripts/Generate-Changelog.ps1                    # pending changes listed under "Unreleased"
-./scripts/Generate-Changelog.ps1 -Version 1.2.3     # pending changes listed under 1.2.3
+./.github/scripts/Generate-Changelog.ps1                    # pending changes listed under "Unreleased"
+./.github/scripts/Generate-Changelog.ps1 -Version 1.2.3     # pending changes listed under 1.2.3
 ```
 
 ## License

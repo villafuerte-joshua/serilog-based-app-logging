@@ -43,7 +43,7 @@ jobs:
           "VERSION=$version" >> $env:GITHUB_OUTPUT
 
       - name: Generate Changelog
-        run: ./github/scripts/Generate-Changelog.ps1 -Ref "${{ github.ref_name }}" -ReleaseNotesPath ApplicationLogging/RELEASE_NOTES.md
+        run: ./.github/scripts/Generate-Changelog.ps1 -Ref "${{ github.ref_name }}" -ReleaseNotesPath ApplicationLogging/RELEASE_NOTES.md
 
       - name: Restore Packages
         run: dotnet restore
