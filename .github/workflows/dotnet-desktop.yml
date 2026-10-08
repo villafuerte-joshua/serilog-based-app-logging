@@ -11,7 +11,7 @@ jobs:
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: windows-latest
     permissions:
-      contents: read
+      contents: write
       id-token: write
     defaults:
       run:
@@ -65,3 +65,25 @@ jobs:
 
       - name: Nuget Publish
         run: dotnet nuget push "./nupkgs/${{ env.Package_Name }}.${{ steps.semantic.outputs.VERSION }}.nupkg" --api-key "${{ steps.nuget-login.outputs.NUGET_API_KEY }}" --source https://www.nuget.org/api/v2/package --skip-duplicate
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $tag = "${{ github.ref_name }}"
+          $version = "${{ steps.semantic.outputs.VERSION }}"
+          $package = "./nupkgs/${{ env.Package_Name }}.$version.nupkg"
+
+          $notes = Get-Content ApplicationLogging/RELEASE_NOTES.md -Raw
+          $notes += "`n**NuGet:** https://www.nuget.org/packages/${{ env.Package_Name }}/$version`n"
+          Set-Content -Path release-notes.md -Value $notes -Encoding utf8
+
+          gh release view $tag *> $null
+          if ($LASTEXITCODE -eq 0) {
+            gh release edit $tag --title $tag --notes-file release-notes.md
+            gh release upload $tag $package --clobber
+          }
+          else {
+            gh release create $tag $package --title $tag --notes-file release-notes.md --verify-tag
+          }
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
