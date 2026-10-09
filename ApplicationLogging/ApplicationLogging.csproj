@@ -12,6 +12,8 @@
 		<PackageTags>logging;serilog</PackageTags>
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 		<PackageReadmeFile>README.md</PackageReadmeFile>
+		<PackageLicenseExpression>MIT</PackageLicenseExpression>
+		<Copyright>Copyright (c) 2026 Joshua Villafuerte</Copyright>
 		<PackageProjectUrl>https://www.nuget.org/packages/Yuehanxin.ApplicationLogging</PackageProjectUrl>
 		<RepositoryUrl>https://github.com/villafuerte-joshua/serilog-based-app-logging</RepositoryUrl>
 		<RepositoryType>git</RepositoryType>
@@ -25,6 +27,7 @@
 	<ItemGroup>
 		<None Include="README.md" Pack="true" PackagePath="\" />
 		<None Include="..\CHANGELOG.md" Pack="true" PackagePath="\" Link="CHANGELOG.md" Condition="Exists('..\CHANGELOG.md')" />
+		<None Include="..\LICENSE.txt" Pack="true" PackagePath="\" Link="LICENSE.txt" />
 	</ItemGroup>
 
 	<ItemGroup>
